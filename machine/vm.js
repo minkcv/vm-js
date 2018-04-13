@@ -9,7 +9,14 @@ var VM = {
     wait: false,
     instrCount: 0,
     startTime: Date.now(),
-    ipsFactor: 62
+    ipsFactor: 62,
+    displayWait: 16,
+    displayStartTime: Date.now(),
+    gpu: {
+        active: false,
+        refreshed: false
+    },
+    canvas: null
 }
 
 function run(vm) {
@@ -34,7 +41,12 @@ function run(vm) {
         vm.startTime = Date.now();
         vm.wait = false;
     }
-    // TODO: update gpu and graphics
+    if (vm.displayStartTime + vm.displayWait < Date.now()) {
+        updateGPU(vm);
+        if (vm.gpu.active) {
+            render(vm, vm.canvas);
+        }
+    }
     if (vm.step)
         vm.breakState = true;
 

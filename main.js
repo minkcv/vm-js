@@ -12,5 +12,6 @@ for (var i = 0; i < pong.length + 1; i++) {
 }
 
 VM.code = pong2;
+VM.canvas = document.getElementById('game_canvas');
 
 run(VM);
