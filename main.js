@@ -2,12 +2,13 @@ var pong = 'b140b280a210b201b308a312b202b340a312b203b308a312b204b340a312b205b380
 
 var instruction = '';
 var pong2 = []; // Make groups of 2 bytes
-for (var i = 0; i < pong.length; i++) {
+for (var i = 0; i < pong.length + 1; i++) {
     if (i % 4 == 0 && i > 0) {
         pong2.push(parseInt(instruction, 16))
         instruction = '';
     }
-    instruction += pong.charAt(i);
+    if (i < pong.length)
+        instruction += pong.charAt(i);
 }
 
 VM.code = pong2;
