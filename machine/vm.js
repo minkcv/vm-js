@@ -67,7 +67,7 @@ function exec(vm) {
                     vm.regs[arg1] = vm.regs[arg1] >> vm.regs[arg2];
                     break;
                 case OPCODES.EXT_JMP:
-                    vm.pc = vm.regs[arg1] * JUMP_SEGMENT_SIZE + vm.regs[arg2] - 1; // Not sure about this -1.
+                    vm.pc = vm.regs[arg1] * JUMP_SEGMENT_SIZE + vm.regs[arg2] - 1;
                     break;
                 case OPCODES.EXT_NOP:
                     break;
@@ -84,19 +84,18 @@ function exec(vm) {
             vm.regs[arg0] = vm.regs[arg1] - vm.regs[arg2];
             break;
         case OPCODES.ADDC:
-            vm.regs[arg0] += vm.regs[arg1] << 4 & 0xF0 - vm.regs[arg2];
+            vm.regs[arg0] += ((vm.regs[arg1] << 4) & 0xF0) + arg2;
             break;
         case OPCODES.SUBC:
-            vm.regs[arg0] -= vm.regs[arg1] << 4 & 0xF0 - vm.regs[arg2];
+            vm.regs[arg0] -= ((vm.regs[arg1] << 4) & 0xF0) + arg2;
             break;
         case OPCODES.CMP:
             if (vm.regs[arg1] < vm.regs[arg2])
                 vm.regs[arg0] = 0;
-            if (vm.regs[arg1] > vm.regs[arg2])
+            else if (vm.regs[arg1] > vm.regs[arg2])
                 vm.regs[arg0] = 2;
-            if (vm.regs[arg1] == vm.regs[arg2])
+            else
                 vm.regs[arg0] = 1;
-            
             break;
         case OPCODES.JLT:
             if (vm.regs[arg0] == 0)
@@ -116,9 +115,11 @@ function exec(vm) {
         case OPCODES.STR:
             if (vm.regs[arg1] < 128)
                 vm.memory[vm.regs[arg1] * MEMORY_SEGMENT_SIZE + vm.regs[arg2]] = vm.regs[arg0];
+            else
+                vm.breakState = true;
             break;
         case OPCODES.LRC:
-            vm.regs[arg0] = (arg1 << 4) & 0xF0 + arg2;
+            vm.regs[arg0] = ((arg1 << 4) & 0xF0) + arg2;
             break;
         case OPCODES.AND:
             vm.regs[arg0] = vm.regs[arg1] & vm.regs[arg2];
