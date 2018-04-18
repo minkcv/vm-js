@@ -27,10 +27,10 @@ function render(vm, canvas) {
         var flipH = flags & 64 == 64;
         var flipV = flags & 32 == 32;
         var alpha = flags & 16 == 16;
-        var x = vm.memory[index + 1];
-        var y = vm.memory[index + 2];
-        var w = vm.memory[index + 3];
-        var h = vm.memory[index + 4];
+        var spriteX = vm.memory[index + 1];
+        var spriteY = vm.memory[index + 2];
+        var spriteW = vm.memory[index + 3];
+        var spriteH = vm.memory[index + 4];
         var seg = vm.memory[index + 5];
         var off = vm.memory[index + 6];
         var spriteColorPalette = [];
@@ -39,25 +39,28 @@ function render(vm, canvas) {
         spriteColorPalette.push(vm.memory[index + 9]);
         spriteColorPalette.push(vm.memory[index + 10]);
 
-        if (x + w > SCREEN_WIDTH)
+        if (spriteX + spriteW > SCREEN_WIDTH)
             continue;
-        if (y + h > SCREEN_HEIGHT)
+        if (spriteY + spriteH > SCREEN_HEIGHT)
             continue;
 
-        var nBytes = w / 4 * h;
-        var start = seg * MEMORY_SEGMENT_SIZE + off;
-        for (var i = start; i < start + nBytes; i++) {
-            for (var pixel = 0; pixel < 4; pixel++) {
-                var paletteIndex = (vm.memory[i] >> (pixel * 2)) & 3;
-                var color = spriteColorPalette[paletteIndex];
-                var r = getRed(color);
-                var g = getGreen(color);
-                var b = getBlue(color);
-                data[x + y + w + (h * SCREEN_WIDTH) + pixel]     = getRed(color);
-                data[x + y + w + (h * SCREEN_WIDTH) + pixel + 1] = getGreen(color);
-                data[x + y + w + (h * SCREEN_WIDTH) + pixel + 2] = getBlue(color);
-                data[x + y + w + (h * SCREEN_WIDTH) + pixel + 3] = alpha ? 0 : 255;
-            }
+        var nPixels = spriteW * spriteH;
+        var startMemoryIndex = seg * MEMORY_SEGMENT_SIZE + off;
+        var startDataIndex = spriteY * SCREEN_WIDTH + spriteX;
+        for (var i = 0; i < nPixels; i++) {
+            var paletteIndex = (vm.memory[i + startMemoryIndex] >> 6) & 3;
+            var color = spriteColorPalette[paletteIndex];
+            var r = getRed(color);
+            var g = getGreen(color);
+            var b = getBlue(color);
+            var pixelX = i % spriteW;
+            var pixelY = Math.floor(i / spriteW) * SCREEN_WIDTH;
+            var dataIndex = startDataIndex + pixelY + pixelX;
+            dataIndex *= 4; // 4 values per pixel (RGBA)
+            data[dataIndex]     = getRed(color);
+            data[dataIndex + 1] = getGreen(color);
+            data[dataIndex + 2] = getBlue(color);
+            data[dataIndex + 3] = alpha ? 0 : 255;
         }
     }
 

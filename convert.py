@@ -1,9 +1,10 @@
 ### Convert binary programs to ascii strings of UTF-8
 
 import os
-os.remove('plain.txt')
+if os.path.exists('plain.txt'):
+    os.remove('plain.txt')
 
-pong = open('pong.bin', 'rb')
+pong = open('mars.rom', 'rb')
 out = open('plain.txt', 'w')
 
 byte = pong.read(1) # Skip length prefix
