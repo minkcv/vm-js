@@ -21,12 +21,12 @@ function render(vm, canvas) {
     var end = SPRITE_ATTR_SEG * MEMORY_SEGMENT_SIZE + NUM_SPRITES * SPRITE_ATTR_LENGTH;
     for (var index = segment; index < end; index += SPRITE_ATTR_LENGTH) {
         var flags = vm.memory[index];
-        if (flags & 128 != 128)
+        if ((flags & 128) != 128)
             continue; // Not enabled
 
-        var flipH = flags & 64 == 64;
-        var flipV = flags & 32 == 32;
-        var alpha = flags & 16 == 16;
+        var flipH = (flags & 64) == 64;
+        var flipV = (flags & 32) == 32;
+        var alpha = (flags & 16) == 16;
         var spriteX = vm.memory[index + 1];
         var spriteY = vm.memory[index + 2];
         var spriteW = vm.memory[index + 3];
@@ -46,22 +46,29 @@ function render(vm, canvas) {
 
         var nPixels = spriteW * spriteH;
         var startMemoryIndex = seg * MEMORY_SEGMENT_SIZE + off;
-        var startDataIndex = spriteY * SCREEN_WIDTH + spriteX;
-        for (var i = 0; i < nPixels; i++) {
-            var paletteIndex = (vm.memory[i + startMemoryIndex] >> 6) & 3;
-            var color = spriteColorPalette[paletteIndex];
-            var r = getRed(color);
-            var g = getGreen(color);
-            var b = getBlue(color);
-            var pixelX = i % spriteW;
-            var pixelY = Math.floor(i / spriteW) * SCREEN_WIDTH;
-            var dataIndex = startDataIndex + pixelY + pixelX;
-            dataIndex *= 4; // 4 values per pixel (RGBA)
-            data[dataIndex]     = getRed(color);
-            data[dataIndex + 1] = getGreen(color);
-            data[dataIndex + 2] = getBlue(color);
-            data[dataIndex + 3] = alpha ? 0 : 255;
+        var startDataIndex = (spriteY * SCREEN_WIDTH + spriteX) * 4;
+        var spritePixels = [];
+        for (var i = 0; i < nPixels / 4; i++) {
+            for (var ii = 0; ii < 4; ii++) {
+                var paletteIndex = (vm.memory[i + startMemoryIndex] >> (2 * (3 - ii))) & 3;
+                spritePixels.push(paletteIndex);
+                if (alpha && (paletteIndex == 3))
+                    continue; // Skip this transparent pixel in the sprite
+                var color = spriteColorPalette[paletteIndex];
+                var r = getRed(color);
+                var g = getGreen(color);
+                var b = getBlue(color);
+                var pixelX = ((i * 4) + ii) % spriteW;
+                var pixelY = Math.floor(((i * 4) + ii) / spriteW) * SCREEN_WIDTH;
+                var dataIndex = startDataIndex + (pixelY + pixelX) * 4;
+                data[dataIndex]     = getRed(color);
+                data[dataIndex + 1] = getGreen(color);
+                data[dataIndex + 2] = getBlue(color);
+                data[dataIndex + 3] = 255;
+            }
         }
+        if (index == 16640)
+            console.log(spritePixels);
     }
 
     ctx.putImageData(imageData, 0, 0);
