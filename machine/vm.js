@@ -72,11 +72,11 @@ function exec(vm) {
                 case OPCODES.EXT_NOT:
                     vm.regs[arg1] = ~(vm.regs[arg2]);
                     break;
-                case OPCODES.EXT_LSL:
-                    vm.regs[arg1] = vm.regs[arg1] << vm.regs[arg2];
+                    case OPCODES.EXT_LSL:
+                    vm.regs[arg1] = (vm.regs[arg1] << vm.regs[arg2]) % 256;
                     break;
                 case OPCODES.EXT_LSR:
-                    vm.regs[arg1] = vm.regs[arg1] >> vm.regs[arg2];
+                    vm.regs[arg1] = (vm.regs[arg1] >> vm.regs[arg2]) % 256;
                     break;
                 case OPCODES.EXT_JMP:
                     vm.pc = vm.regs[arg1] * JUMP_SEGMENT_SIZE + vm.regs[arg2] - 1;
@@ -90,16 +90,19 @@ function exec(vm) {
             }
             break;
         case OPCODES.ADD:
-            vm.regs[arg0] = vm.regs[arg1] + vm.regs[arg2];
+            vm.regs[arg0] = (vm.regs[arg1] + vm.regs[arg2]) % 256;
             break;
         case OPCODES.SUB:
-            vm.regs[arg0] = vm.regs[arg1] - vm.regs[arg2];
+            vm.regs[arg0] = Math.abs((vm.regs[arg1] - vm.regs[arg2]) % 256);
             break;
         case OPCODES.ADDC:
             vm.regs[arg0] += ((arg1 << 4) & 0xF0) + arg2;
+            vm.regs[arg0] %= 256;
             break;
         case OPCODES.SUBC:
             vm.regs[arg0] -= ((arg1 << 4) & 0xF0) + arg2;
+            vm.regs[arg0] %= 256;
+            vm.regs[arg0] = Math.abs(vm.regs[arg0]);
             break;
         case OPCODES.CMP:
             if (vm.regs[arg1] < vm.regs[arg2])
