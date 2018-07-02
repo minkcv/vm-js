@@ -4,16 +4,17 @@ var marsrom = 'ff0000fffc00003ffc15583ffc15583ffc15683ffc05a03fff0000fffc00003ff
 
 var instruction = '';
 var program = []; // Make groups of 2 bytes
-for (var i = 0; i < mars.length + 4; i+=4) {
-    instruction += mars.charAt(i);
-    instruction += mars.charAt(i + 1);
-    instruction += mars.charAt(i + 2);
-    instruction += mars.charAt(i + 3);
+for (var i = 0; i < pong.length + 4; i+=4) {
+    instruction += pong.charAt(i);
+    instruction += pong.charAt(i + 1);
+    instruction += pong.charAt(i + 2);
+    instruction += pong.charAt(i + 3);
     program.push(parseInt(instruction, 16))
     instruction = '';
 }
 
 VM.code = program;
+/*
 var byte = '';
 for (var i = 0; i < marsrom.length + 2; i += 2) {
     byte += marsrom.charAt(i);
@@ -21,6 +22,7 @@ for (var i = 0; i < marsrom.length + 2; i += 2) {
     VM.memory[ROM_SEGMENT_START * MEMORY_SEGMENT_SIZE + (i / 2)] = parseInt(byte, 16);
     byte = '';
 }
+*/
 VM.canvas = document.getElementById('game_canvas');
 
 run(VM);
