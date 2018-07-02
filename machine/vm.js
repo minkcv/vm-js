@@ -96,10 +96,10 @@ function exec(vm) {
             vm.regs[arg0] = vm.regs[arg1] - vm.regs[arg2];
             break;
         case OPCODES.ADDC:
-            vm.regs[arg0] += ((vm.regs[arg1] << 4) & 0xF0) + arg2;
+            vm.regs[arg0] += ((arg1 << 4) & 0xF0) + arg2;
             break;
         case OPCODES.SUBC:
-            vm.regs[arg0] -= ((vm.regs[arg1] << 4) & 0xF0) + arg2;
+            vm.regs[arg0] -= ((arg1 << 4) & 0xF0) + arg2;
             break;
         case OPCODES.CMP:
             if (vm.regs[arg1] < vm.regs[arg2])
