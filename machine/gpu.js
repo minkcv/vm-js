@@ -67,8 +67,6 @@ function render(vm, canvas) {
                 data[dataIndex + 3] = 255;
             }
         }
-        if (index == 16640)
-            console.log(spritePixels);
     }
 
     ctx.putImageData(imageData, 0, 0);
