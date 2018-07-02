@@ -50,7 +50,7 @@ function run(vm) {
     if (vm.step)
         vm.breakState = true;
 
-    requestAnimationFrame(() => run(VM), 16);
+    setInterval(() => run(VM), 0);
 }
 
 function exec(vm) {
