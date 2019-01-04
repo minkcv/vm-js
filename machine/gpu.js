@@ -7,14 +7,10 @@ function updateGPU(vm) {
     }
 }
 
-function render(vm, canvas) {
-    var ctx = canvas.getContext('2d');
+function render(vm, gl, imageData) {
     var paletteIndex = vm.memory[BACK_COLOR_SEG * MEMORY_SEGMENT_SIZE + BACK_COLOR_OFFSET];
-    ctx.fillStyle = 'rgb(' + getRed(paletteIndex) + ',' + getGreen(paletteIndex) + ',' + getBlue(paletteIndex) + ')';
-    ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-
-    var imageData = ctx.getImageData(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-    var data = imageData.data;
+    gl.clearColor(getRed(paletteIndex), getGreen(paletteIndex), getBlue(paletteIndex), 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
 
     var segment = SPRITE_ATTR_SEG * MEMORY_SEGMENT_SIZE;
     var offset = 0;
@@ -58,22 +54,55 @@ function render(vm, canvas) {
                 var r = getRed(color);
                 var g = getGreen(color);
                 var b = getBlue(color);
-                var pixelX = ((i * 4) + ii) % spriteW;
-                var pixelY = Math.floor(((i * 4) + ii) / spriteW) * SCREEN_WIDTH;
-                var dataIndex = startDataIndex + (pixelY + pixelX) * 4;
-                data[dataIndex]     = getRed(color);
-                data[dataIndex + 1] = getGreen(color);
-                data[dataIndex + 2] = getBlue(color);
-                data[dataIndex + 3] = 255;
+                var pixelX = ((i * 3) + ii) % spriteW;
+                var pixelY = Math.floor(((i * 3) + ii) / spriteW) * SCREEN_WIDTH;
+                var dataIndex = startDataIndex + (pixelY + pixelX) * 3;
+                imageData[dataIndex]     = getRed(color);
+                imageData[dataIndex + 1] = getGreen(color);
+                imageData[dataIndex + 2] = getBlue(color);
             }
         }
     }
 
-    ctx.putImageData(imageData, 0, 0);
-}
+    var positionLocation = gl.getAttribLocation(vm.glProgram, "a_position");
+    var texCoordLocation = gl.getAttribLocation(vm.glProgram, "a_texCoord");
+    var positionBuffer = gl.createBuffer();
+    gl.enableVertexAttribArray(positionLocation);
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+        0, 0,
+        256, 0,
+        0, 192,
+        0, 192,
+        256, 0,
+        256, 192
+    ]), gl.STATIC_DRAW);
+    var texCoordBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+        0.0,  0.0,
+        1.0,  0.0,
+        0.0,  1.0,
+        0.0,  1.0,
+        1.0,  0.0,
+        1.0,  1.0]), gl.STATIC_DRAW);
 
-function renderSprite(vm, ctx) {
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, vm.texture);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, SCREEN_WIDTH, SCREEN_HEIGHT, 0, gl.RGB, gl.UNSIGNED_BYTE, imageData);
+    gl.uniform1i(vm.samplerLoc, 0);
 
+    gl.enableVertexAttribArray(positionLocation);
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+
+    gl.enableVertexAttribArray(texCoordLocation);
+    gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+    gl.vertexAttribPointer(texCoordLocation, 2, gl.FLOAT, false, 0, 0);
+    
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
 }
 
 function getRed(index) {

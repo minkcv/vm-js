@@ -16,7 +16,14 @@ var VM = {
         active: false,
         refreshed: false
     },
-    canvas: null
+    canvas: null,
+    gl: null,
+    imageData: null,
+    vertexShader: null,
+    fragmentShader: null,
+    glProgram: null,
+    samplerLoc: null,
+    texture: null
 }
 
 function run(vm) {
@@ -44,7 +51,7 @@ function run(vm) {
     if (vm.displayStartTime + vm.displayWait < Date.now()) {
         updateGPU(vm);
         if (vm.gpu.active) {
-            render(vm, vm.canvas);
+            render(vm, vm.gl, vm.imageData);
         }
     }
     if (vm.step)

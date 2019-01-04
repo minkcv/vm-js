@@ -23,6 +23,52 @@ for (var i = 0; i < marsrom.length + 2; i += 2) {
     byte = '';
 }
 
-VM.canvas = document.getElementById('game_canvas');
+var vertexShaderSource = `#version 300 es
+layout(location = 0) in vec4 a_position;
+layout(location = 1) in vec2 a_texCoord;
+out vec2 v_texCoord;
+void main()
+{
+    gl_Position = a_position;
+    v_texCoord = a_texCoord;
+}
+`;
 
+var fragmentShaderSource = `#version 300 es
+precision mediump float;
+in vec2 v_texCoord;
+layout(location = 0) out vec4 outColor;
+uniform sampler2D s_texture;
+void main()
+{
+    outColor = texture(s_texture, v_texCoord);
+}
+`;
+
+VM.canvas = document.getElementById('game_canvas');
+VM.gl = VM.canvas.getContext('webgl2');
+VM.glProgram = VM.gl.createProgram();
+VM.imageData = new Uint8Array(SCREEN_WIDTH * SCREEN_HEIGHT * 3);
+VM.vertexShader = VM.gl.createShader(VM.gl.VERTEX_SHADER);
+VM.gl.shaderSource(VM.vertexShader, vertexShaderSource);
+VM.gl.compileShader(VM.vertexShader);
+var success = VM.gl.getShaderParameter(VM.vertexShader, VM.gl.COMPILE_STATUS);
+if (!success)
+    console.log(VM.gl.getShaderInfoLog(VM.vertexShader));
+VM.fragmentShader = VM.gl.createShader(VM.gl.FRAGMENT_SHADER);
+VM.gl.shaderSource(VM.fragmentShader, fragmentShaderSource);
+VM.gl.compileShader(VM.fragmentShader);
+success = VM.gl.getShaderParameter(VM.fragmentShader, VM.gl.COMPILE_STATUS);
+if (!success)
+    console.log(VM.gl.getShaderInfoLog(VM.fragmentShader));
+VM.gl.attachShader(VM.glProgram, VM.vertexShader);
+VM.gl.attachShader(VM.glProgram, VM.fragmentShader);
+VM.gl.linkProgram(VM.glProgram);
+success = VM.gl.getProgramParameter(VM.glProgram, VM.gl.LINK_STATUS);
+if (!success)
+    console.log(VM.gl.getProgramInfoLog(VM.glProgram));
+VM.gl.useProgram(VM.glProgram);
+VM.samplerLoc = VM.gl.getUniformLocation(VM.glProgram, "s_texture");
+VM.texture = VM.gl.createTexture();
+VM.gl.viewport(0, 0, VM.canvas.clientWidth, VM.canvas.clientHeight);
 run(VM);
