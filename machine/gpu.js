@@ -11,6 +11,15 @@ function render(vm, gl, imageData) {
     var paletteIndex = vm.memory[BACK_COLOR_SEG * MEMORY_SEGMENT_SIZE + BACK_COLOR_OFFSET];
     gl.clearColor(getRed(paletteIndex), getGreen(paletteIndex), getBlue(paletteIndex), 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
+    
+    var bgRed = getRed(paletteIndex);
+    var bgGreen = getGreen(paletteIndex);
+    var bgBlue = getBlue(paletteIndex);
+    for (var i = 0; i < SCREEN_WIDTH * SCREEN_HEIGHT * 3; i += 3) {
+        imageData[i] = bgRed;
+        imageData[i + 1] = bgGreen;
+        imageData[i + 2] = bgBlue;
+    }
 
     var segment = SPRITE_ATTR_SEG * MEMORY_SEGMENT_SIZE;
     var offset = 0;
@@ -42,7 +51,7 @@ function render(vm, gl, imageData) {
 
         var nPixels = spriteW * spriteH;
         var startMemoryIndex = seg * MEMORY_SEGMENT_SIZE + off;
-        var startDataIndex = (spriteY * SCREEN_WIDTH + spriteX) * 4;
+        var startDataIndex = (spriteY * SCREEN_WIDTH + spriteX) * 3;
         var spritePixels = [];
         for (var i = 0; i < nPixels / 4; i++) {
             for (var ii = 0; ii < 4; ii++) {
@@ -54,8 +63,8 @@ function render(vm, gl, imageData) {
                 var r = getRed(color);
                 var g = getGreen(color);
                 var b = getBlue(color);
-                var pixelX = ((i * 3) + ii) % spriteW;
-                var pixelY = Math.floor(((i * 3) + ii) / spriteW) * SCREEN_WIDTH;
+                var pixelX = ((i * 4) + ii) % spriteW;
+                var pixelY = Math.floor(((i * 4) + ii) / spriteW) * SCREEN_WIDTH;
                 var dataIndex = startDataIndex + (pixelY + pixelX) * 3;
                 imageData[dataIndex]     = getRed(color);
                 imageData[dataIndex + 1] = getGreen(color);
@@ -64,8 +73,12 @@ function render(vm, gl, imageData) {
         }
     }
 
+    // lookup uniforms
+    var resolutionLocation = gl.getUniformLocation(vm.glProgram, "u_resolution");
+    var textureSizeLocation = gl.getUniformLocation(vm.glProgram, "u_textureSize");
     var positionLocation = gl.getAttribLocation(vm.glProgram, "a_position");
-    var texCoordLocation = gl.getAttribLocation(vm.glProgram, "a_texCoord");
+    var texcoordLocation = gl.getAttribLocation(vm.glProgram, "a_texCoord");
+
     var positionBuffer = gl.createBuffer();
     gl.enableVertexAttribArray(positionLocation);
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
@@ -77,42 +90,72 @@ function render(vm, gl, imageData) {
         256, 0,
         256, 192
     ]), gl.STATIC_DRAW);
-    var texCoordBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+    var texcoordBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, texcoordBuffer);
+
+    // 192 / 256 = 0.75
+    // Texture must be 256 x 256, so use 0.75 as the y coordinate to clip to 256 x 192
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
         0.0,  0.0,
         1.0,  0.0,
-        0.0,  1.0,
-        0.0,  1.0,
+        0.0,  0.75,
+        0.0,  0.75,
         1.0,  0.0,
-        1.0,  1.0]), gl.STATIC_DRAW);
+        1.0,  0.75]), gl.STATIC_DRAW);
 
-    gl.activeTexture(gl.TEXTURE0);
+    //gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, vm.texture);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, SCREEN_WIDTH, SCREEN_HEIGHT, 0, gl.RGB, gl.UNSIGNED_BYTE, imageData);
-    gl.uniform1i(vm.samplerLoc, 0);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, SCREEN_WIDTH, SCREEN_WIDTH, 0, gl.RGB, gl.UNSIGNED_BYTE, imageData);
 
+    // Turn on the position attribute
     gl.enableVertexAttribArray(positionLocation);
+  
+    // Bind the position buffer.
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-    gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
-
-    gl.enableVertexAttribArray(texCoordLocation);
-    gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
-    gl.vertexAttribPointer(texCoordLocation, 2, gl.FLOAT, false, 0, 0);
+  
+    // Tell the position attribute how to get data out of positionBuffer (ARRAY_BUFFER)
+    var size = 2;          // 2 components per iteration
+    var type = gl.FLOAT;   // the data is 32bit floats
+    var normalize = false; // don't normalize the data
+    var stride = 0;        // 0 = move forward size * sizeof(type) each iteration to get the next position
+    var offset = 0;        // start at the beginning of the buffer
+    gl.vertexAttribPointer(
+        positionLocation, size, type, normalize, stride, offset);
+  
+    // Turn on the teccord attribute
+    gl.enableVertexAttribArray(texcoordLocation);
+  
+    // Bind the position buffer.
+    gl.bindBuffer(gl.ARRAY_BUFFER, texcoordBuffer);
+  
+    // Tell the position attribute how to get data out of positionBuffer (ARRAY_BUFFER)
+    var size = 2;          // 2 components per iteration
+    var type = gl.FLOAT;   // the data is 32bit floats
+    var normalize = false; // don't normalize the data
+    var stride = 0;        // 0 = move forward size * sizeof(type) each iteration to get the next position
+    var offset = 0;        // start at the beginning of the buffer
+    gl.vertexAttribPointer(
+        texcoordLocation, size, type, normalize, stride, offset);
+  
+    // set the resolution
+    gl.uniform2f(resolutionLocation, SCREEN_WIDTH, SCREEN_HEIGHT);
+  
+    // set the size of the image
+    gl.uniform2f(textureSizeLocation, SCREEN_WIDTH, SCREEN_HEIGHT);
     
     gl.drawArrays(gl.TRIANGLES, 0, 6);
 }
 
 function getRed(index) {
-    return Math.floor((index / 32) * 36);
+    return Math.min(255, Math.floor((index / 32) * 36));
 }
 
 function getGreen(index) {
-    return Math.floor((index % 32) / 4 * 36);
+    return Math.min(255, Math.floor((index % 32) / 4 * 36));
 }
 
 function getBlue(index) {
-    return Math.floor((index % 4) * 85);
+    return Math.min(255, Math.floor((index % 4) * 85));
 }
