@@ -27,7 +27,6 @@ var VM = {
 }
 
 function run(vm) {
-    // TODO: keyboard input
     if (vm.breakState)
         return;
 
