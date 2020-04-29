@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <title>Vapor Spec VM</title>
     <link rel="stylesheet" type="text/css" media="screen" href="main.css" />
+    <script src="./tools/assembler.js"></script>
     <script src="./machine/constants.js"></script>
     <script src="./machine/opcodes.js"></script>
     <script src="./machine/gpu.js"></script>
@@ -11,7 +12,8 @@
     <script src="./machine/vm.js"></script>
 </head>
 <body>
-    <canvas width=256 height=192 id='game_canvas'></canvas>
+    <canvas width=256 height=192 id='game_canvas'></canvas><br/>
+    <textarea rows='20' cols='50' id='assembly_input' class='code'></textarea>
     <script src="./main.js"></script>
 </body>
 </html>

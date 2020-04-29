@@ -1,12 +1,12 @@
 var VM = {
-    regs: new Array(NUM_REGISTERS).fill(0),
-    memory: new Array(NUM_SEGMENTS * MEMORY_SEGMENT_SIZE).fill(0),
+    regs: null,
+    memory: null,
     pc: 0,
     code: [],
     debugMode: false,
     breakState: false,
     step: false,
-    startTime: Date.now(),
+    startTime: null,
     gpu: {
         active: false,
         refreshed: false
