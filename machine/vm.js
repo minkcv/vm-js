@@ -6,57 +6,38 @@ var VM = {
     debugMode: false,
     breakState: false,
     step: false,
-    wait: false,
-    instrCount: 0,
     startTime: Date.now(),
-    ipsFactor: 62,
-    displayWait: 16,
-    displayStartTime: Date.now(),
     gpu: {
         active: false,
         refreshed: false
     },
     canvas: null,
-    gl: null,
-    imageData: null,
-    vertexShader: null,
-    fragmentShader: null,
-    glProgram: null,
-    samplerLoc: null,
-    texture: null
+    ctx: null,
+    imageData: null
 }
 
 function run(vm) {
+    var delta = Date.now() - vm.startTime;
     if (vm.breakState)
         return;
 
-    if (!vm.wait) {
+    // The number of instructions that should be done based on how much time has passed.
+    // Exec 250 instructions if 5 milliseconds have passed: 500,000 / 1 == 250 / 0.0005
+    var numInstructions = INSTRUCTIONS_PER_SECOND * (delta / 1000)
+    for (var i = 0; i < numInstructions; i++) {
         exec(vm);
         vm.pc++;
-        vm.instrCount++;
-
-        if (vm.instrCount > INSTRUCTIONS_PER_SECOND / vm.ipsFactor)
-            vm.wait = true;
     }
-    if (Date.now() - vm.startTime > 1000 / vm.ipsFactor) {
-        // 16ms have passed
-        if (vm.instrCount < INSTRUCTIONS_PER_SECOND / vm.ipsFactor) {
-            //console.log('running below desired ips');
-        }
-        vm.instrCount = 0;
-        vm.startTime = Date.now();
-        vm.wait = false;
-    }
-    if (vm.displayStartTime + vm.displayWait < Date.now()) {
-        updateGPU(vm);
-        if (vm.gpu.active) {
-            render(vm, vm.gl, vm.imageData);
-        }
+    
+    updateGPU(vm);
+    if (vm.gpu.active) {
+        render(vm, vm.gl, vm.imageData);
     }
     if (vm.step)
         vm.breakState = true;
-
-    setInterval(() => run(VM), 0);
+        
+    vm.startTime = Date.now();
+    setTimeout(() => run(VM), 16);
 }
 
 function exec(vm) {
