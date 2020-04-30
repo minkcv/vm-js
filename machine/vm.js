@@ -59,7 +59,7 @@ function exec(vm) {
                 case OPCODES.EXT_NOT:
                     vm.regs[arg1] = ~(vm.regs[arg2]);
                     break;
-                    case OPCODES.EXT_LSL:
+                case OPCODES.EXT_LSL:
                     vm.regs[arg1] = (vm.regs[arg1] << vm.regs[arg2]) % 256;
                     break;
                 case OPCODES.EXT_LSR:
@@ -80,16 +80,20 @@ function exec(vm) {
             vm.regs[arg0] = (vm.regs[arg1] + vm.regs[arg2]) % 256;
             break;
         case OPCODES.SUB:
-            vm.regs[arg0] = Math.abs((vm.regs[arg1] - vm.regs[arg2]) % 256);
+            var sub = vm.regs[arg1] - vm.regs[arg2];
+            if (sub < 0)
+                sub = 256 + sub;
+            vm.regs[arg0] = sub;
             break;
         case OPCODES.ADDC:
             vm.regs[arg0] += ((arg1 << 4) & 0xF0) + arg2;
             vm.regs[arg0] %= 256;
             break;
         case OPCODES.SUBC:
-            vm.regs[arg0] -= ((arg1 << 4) & 0xF0) + arg2;
-            vm.regs[arg0] %= 256;
-            vm.regs[arg0] = Math.abs(vm.regs[arg0]);
+            var sub = vm.regs[arg0] - (((arg1 << 4) & 0xF0) + arg2);
+            if (sub < 0)
+                sub = 256 + sub;
+            vm.regs[arg0] = sub;
             break;
         case OPCODES.CMP:
             if (vm.regs[arg1] < vm.regs[arg2])
