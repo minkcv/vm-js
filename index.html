@@ -5,6 +5,7 @@
     <title>Vapor Spec VM</title>
     <link rel="stylesheet" type="text/css" media="screen" href="main.css" />
     <script src="./tools/assembler.js"></script>
+    <script src="./tools/compiler.js"></script>
     <script src="./machine/constants.js"></script>
     <script src="./machine/opcodes.js"></script>
     <script src="./machine/gpu.js"></script>
@@ -12,8 +13,19 @@
     <script src="./machine/vm.js"></script>
 </head>
 <body>
-    <canvas width=256 height=192 id='game_canvas'></canvas><br/>
-    <textarea rows='20' cols='50' id='assembly_input' class='code'></textarea>
+    <div class='row'>
+        <div class='column'>
+            <canvas width=256 height=192 id='game_canvas'></canvas>
+        </div>
+        <div class='column'>
+            <p><button onclick='loadProgram(assemble());'>Assemble and Run</button></p>
+            <textarea rows='20' cols='50' id='assembly_input' class='code'></textarea>
+        </div>
+        <div class='column'>
+            <p><button onclick='compile(); loadProgram(assemble());'>Compile, Assemble, and Run</button>  <button onclick='compile();'>Compile</button></p>
+            <textarea rows='20' cols='50' id='vaporlang_input' class='code'></textarea>
+        </div>
+    </div>
     <script src="./main.js"></script>
 </body>
 </html>

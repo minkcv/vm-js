@@ -37,7 +37,6 @@ function run(vm) {
         vm.breakState = true;
         
     vm.startTime = Date.now();
-    setTimeout(() => run(VM), 16);
 }
 
 function exec(vm) {

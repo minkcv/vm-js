@@ -1,7 +1,20 @@
 html {
     background-color: #2c2c2c;
+    font-family: sans-serif;
+    color: white;
 }
 
 .code {
     font-family: monospace
+}
+
+.row:after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+.column {
+    float: left;
+    width: 33.33%;
 }
