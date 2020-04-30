@@ -30,10 +30,16 @@ function render(vm) {
         var flipH = (flags & 64) == 64;
         var flipV = (flags & 32) == 32;
         var alpha = (flags & 16) == 16;
+        var fullWidth = (flags & 8) == 8;
+        var fullHeight = (flags & 4) == 4;
         var spriteX = vm.memory[index + 1];
         var spriteY = vm.memory[index + 2];
         var spriteW = vm.memory[index + 3];
         var spriteH = vm.memory[index + 4];
+        if (fullWidth)
+            spriteW = SCREEN_WIDTH;
+        if (fullHeight)
+            spriteH = SCREEN_HEIGHT;
         var seg = vm.memory[index + 5];
         var off = vm.memory[index + 6];
         var spriteColorPalette = [];
