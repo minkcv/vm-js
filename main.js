@@ -4,9 +4,10 @@ var marsrom = 'ff0000fffc00003ffc15583ffc15583ffc15683ffc05a03fff0000fffc00003ff
 
 //var loadedRoms = [{name: 'mars.rom', data: romStringToBinary(marsrom)}];
 var loadedRoms = [];
+var running;
 
 function loadProgram(bin, rom) {
-    if (bin === undefined || bin == null)
+    if (bin === undefined || bin == null || bin == '')
         return;
     VM.pc = 0;
     VM.regs = new Array(NUM_REGISTERS).fill(0);
@@ -34,7 +35,9 @@ function loadProgram(bin, rom) {
         }
     }
     VM.startTime = Date.now();
-    setInterval(()=>run(VM), 16);
+    if (running)
+        clearInterval(running);
+    running = setInterval(()=>run(VM), 16);
 }
 
 function romStringToBinary(rom) {
