@@ -290,7 +290,6 @@ function decomposeExpression(expr, symbolMap, data, destReg) {
     var neq = expr.findIndex((v) => v == '!=');
     var lt = expr.findIndex((v) => v == '<');
     var gt = expr.findIndex((v) => v == '>');
-    var mem = expr.findIndex((v) => v == '[');
     if (eq != -1) {
         var left = expr.slice(0, eq);
         var right = expr.slice(eq + 1, expr.length);
@@ -367,7 +366,7 @@ function decomposeExpression(expr, symbolMap, data, destReg) {
         data.instructionCount++;
         return;
     }
-    else if (mem != -1) {
+    else if (expr[0] == '[') {
         var segment = [];
         var comma;
         for (var c = 1; c < expr.length && expr[c] != ','; c++) {
@@ -395,7 +394,7 @@ function decomposeExpression(expr, symbolMap, data, destReg) {
     }
     else {
         decomposeExpression(expr[0], symbolMap, data, destReg);
-        decomposeExpression(expr[2], symbolMap, data, destReg + 1);
+        decomposeExpression(expr.slice(2), symbolMap, data, destReg + 1);
         if (expr[1] == '+') {
             data.asm += 'ADD r' + destReg + ' r' + destReg + ' r' + (destReg + 1) + '\n';
             data.instructionCount++;
