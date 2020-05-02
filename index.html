@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <title>Vapor Spec VM</title>
+    <title>Vapor Spec</title>
     <link rel="stylesheet" type="text/css" media="screen" href="main.css" />
     <script src="./tools/assembler.js"></script>
     <script src="./tools/compiler.js"></script>
@@ -20,7 +20,13 @@
             Select ROM:  <select id='rom_select'>
                 <option>[None]</option>
                 <option selected>mars.rom</option>
-            </select>
+            </select><br>
+            <p>
+                Controls:<br>
+                P1: Arrows, Right Control, Right Alt, Right Shift, Enter<br>
+                P2: WASD, Left Control, Left Alt, Left Shift, Tab
+            </p>
+            <a href='https://github.com/minkcv/vm'>Vapor Spec Repo</a>
         </div>
         <div class='column'>
             <p><button onclick='loadProgram(assemble(), getRom());'>Assemble and Run</button></p>

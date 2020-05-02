@@ -18,3 +18,7 @@ html {
     float: left;
     width: 33.33%;
 }
+
+a:visited, a {
+    color: white;
+}
