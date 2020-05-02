@@ -4,6 +4,10 @@ html {
     color: white;
 }
 
+#game_canvas {
+    image-rendering: pixelated;
+}
+
 .code {
     font-family: monospace
 }
