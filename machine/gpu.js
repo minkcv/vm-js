@@ -58,7 +58,24 @@ function render(vm) {
         var startDataIndex = (spriteY * SCREEN_WIDTH + spriteX) * 4;
         for (var i = 0; i < nPixels / 4; i++) {
             for (var ii = 0; ii < 4; ii++) {
-                var paletteIndex = (vm.memory[i + startMemoryIndex] >> (2 * (3 - ii))) & 3;
+                var paletteIndex;
+                if (flipH == 0 && flipV == 0)
+                    paletteIndex = (vm.memory[i + startMemoryIndex] >> (2 * (3 - ii))) & 3;
+                else if (flipH == 1 && flipV == 0) {
+                    var x = (spriteW / 4) - (i % (spriteW / 4)) - 1;
+                    var y = Math.floor(i / (spriteW / 4));
+                    paletteIndex = (vm.memory[startMemoryIndex + x + y * spriteW / 4] >> (2 * (ii))) & 3;
+                }
+                else if (flipH == 0 && flipV == 1) {
+                    var x = i % (spriteW / 4);
+                    var y = spriteH - Math.floor(i / (spriteW / 4)) - 1;
+                    paletteIndex = (vm.memory[startMemoryIndex + x + y * spriteW / 4] >> (2 * (3 - ii))) & 3;
+                }
+                else if (flipH == 1 && flipV == 1) {
+                    var x = (spriteW / 4) - (i % (spriteW / 4)) - 1;
+                    var y = spriteH - Math.floor(i / (spriteW / 4)) - 1;
+                    paletteIndex = (vm.memory[startMemoryIndex + x + y * spriteW / 4] >> (2 * (ii))) & 3;
+                }
                 if (alpha && (paletteIndex == 3)) {
                     continue; // Skip this transparent pixel in the sprite
                 }

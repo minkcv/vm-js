@@ -56,6 +56,7 @@ function uploadRom(files) {
         option.value = file.name;
         option.innerHTML = file.name;
         document.getElementById('rom_select').appendChild(option);
+        option.selected = 'selected';
     };
     if (file)
         reader.readAsArrayBuffer(file);
