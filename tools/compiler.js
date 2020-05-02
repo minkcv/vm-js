@@ -16,13 +16,22 @@ function compile() {
     };
     var blockDepth = 0;
     var endBlockLabelId = 1;
-    var blockEnds = new Array(MAX_CODE_BLOCKS).fill({blockType: 0, labelId: 0});
+    var blockEnds = new Array(MAX_CODE_BLOCKS);
+    for (var i = 0; i < MAX_CODE_BLOCKS; i++) {
+        blockEnds[i] = {blockType: 0, labelId: 0};
+    }
     var symbolMap = {};
     for (var i = 0; i < lines.length; i++) {
         var line = lines[i];
         if (line.length < 1 || line[0] == '\n' || line.startsWith('//'))
             continue;
         var tokens = line.split(' ');
+        for (var t = 0; t < tokens.length; t++) {
+            if (tokens[t] == '') {
+                tokens.splice(0, 1);
+                t--;
+            }
+        }
         var end = -1;
         for (var t = 0; t < tokens.length; t++) {
             var token = tokens[t];
@@ -43,8 +52,8 @@ function compile() {
                 break;
             }
         }
-        if (end > -1) {
-            tokens = tokens.splice(end, tokens.length - end);
+        if (end > -1 && end < tokens.length) {
+            tokens.splice(end, tokens.length - end);
         }
         for (var t = 0; t < tokens.length; t++) {
             var token = tokens[t];
@@ -79,7 +88,7 @@ function compile() {
                 var block = blockEnds[blockDepth];
                 block.labelId = endBlockLabelId;
                 block.blockType = BlockType.While;
-                data.asm += '@_while_' + BlockType.While + '_' + endBlockLabelId;
+                data.asm += '@_while_' + BlockType.While + '_' + endBlockLabelId + '\n';
                 decomposeExpression(expr, symbolMap, data, 0);
                 data.asm += 'LRC r1 #0\n';
                 data.instructionCount++;
@@ -146,16 +155,17 @@ function compile() {
                     console.log('Function ' + name + ' is not allowed to start with underbar on line ' + i);
                     return;
                 }
-                data.asm += '@' + name;
+                data.asm += '@' + name + '\n';
                 blockEnds[blockDepth].blockType = BlockType.Func;
-                t++;
+                blockDepth++;
+                t += 2;
             }
             else if (token == 'return') {
                 functionReturn(data);
             }
             else if (token == 'call') {
                 var name = tokens[t + 1];
-                var returnInstruction = instructionCount + 13;
+                var returnInstruction = data.instructionCount + 13;
                 data.asm += 'LRC r0 #' + CALLSTACK_SEGMENT + '\n';
                 data.instructionCount++;
                 data.asm += 'LRC r1 #' + CALLSTACK_DEPTH_OFFSET + '\n';
@@ -164,7 +174,7 @@ function compile() {
                 data.instructionCount++;
                 data.asm += 'ADDC r2 #1\n';
                 data.instructionCount++;
-                data.asm += 'LRC r3 #' + (returnInstruction / SEGMENT_SIZE) + '\n';
+                data.asm += 'LRC r3 #' + Math.floor(returnInstruction / SEGMENT_SIZE) + '\n';
                 data.instructionCount++;
                 data.asm += 'STR r3 r0 r2\n';
                 data.instructionCount++;
@@ -205,7 +215,7 @@ function compile() {
                 }
                 if (tokens[close + 1] == '=') {
                     var expr = [];
-                    for (var e = t + 5; e < tokens.length; e++) {
+                    for (var e = close + 2; e < tokens.length; e++) {
                         expr.push(tokens[e]);
                     }
                     t = e;
@@ -241,7 +251,180 @@ function compile() {
 }
 
 function decomposeExpression(expr, symbolMap, data, destReg) {
-
+    if (destReg > 12) {
+        console.log('Expression too complex\n');
+        return;
+    }
+    if (! Array.isArray(expr) || expr.length == 1) {
+        if (expr.length == 1)
+            expr = expr[0];
+        var sym = symbolMap[expr];
+        if (sym !== undefined) {
+            if (sym.symbolType == SymbolType.Variable) {
+                data.asm += 'LRC r' + destReg + ' #' + sym.segment + '\n';
+                data.instructionCount++;
+                data.asm += 'LRC r' + (destReg + 1) + ' #' + sym.offset + '\n';
+                data.instructionCount++;
+                data.asm += 'LDR r' + destReg + ' r' + destReg + ' r' + (destReg + 1) + '\n';
+                data.instructionCount++;
+            }
+            else if (sym.symbolType == SymbolType.Constant) {
+                data.asm += 'LRC r' + destReg + ' #' + sym.value + '\n';
+                data.instructionCount++;
+            }
+        }
+        else {
+            var literal = parseInt(expr);
+            if (isNaN(literal) || literal < 0 || literal > 255) {
+                console.log('Not a valid literal ');
+                return;
+            }
+            else {
+                data.asm += 'LRC r' + destReg + ' #' + literal + '\n';
+                data.instructionCount++;
+            }
+        }
+        return;
+    }
+    var eq = expr.findIndex((v) => v == '==');
+    var neq = expr.findIndex((v) => v == '!=');
+    var lt = expr.findIndex((v) => v == '<');
+    var gt = expr.findIndex((v) => v == '>');
+    var mem = expr.findIndex((v) => v == '[');
+    if (eq != -1) {
+        var left = expr.slice(0, eq);
+        var right = expr.slice(eq + 1, expr.length);
+        decomposeExpression(left, symbolMap, data, destReg + 1);
+        decomposeExpression(right, symbolMap, data, destReg + 2);
+        data.asm += 'CMP r' + (destReg + 1) + ' r' + (destReg + 1) + ' r' + (destReg + 2) + '\n';
+        data.instructionCount++;
+        data.asm += 'LRC r' + destReg + ' #1\n';
+        data.instructionCount++;
+        data.asm += 'LRC r' + (destReg + 2) + ' #' + Math.floor((data.instructionCount + 4) / SEGMENT_SIZE) + '\n';
+        data.instructionCount++;
+        data.asm += 'LRC r' + (destReg + 3) + ' #' + ((data.instructionCount + 3) % SEGMENT_SIZE) + '\n';
+        data.instructionCount++;
+        data.asm += 'JEQ r' + (destReg + 1) + ' r' + (destReg + 2) + ' r' + (destReg + 3) + '\n';
+        data.instructionCount++;
+        data.asm += 'LRC r' + destReg + ' #0\n'
+        data.instructionCount++;
+        return;
+    }
+    else if (neq != -1) {
+        var left = expr.slice(0, neq);
+        var right = expr.slice(neq + 1, expr.length);
+        decomposeExpression(left, symbolMap, data, destReg + 1);
+        decomposeExpression(right, symbolMap, data, destReg + 2);
+        data.asm += 'CMP r' + (destReg + 1) + ' r' + (destReg + 1) + ' r' + (destReg + 2) + '\n';
+        data.instructionCount++;
+        data.asm += 'LRC r' + destReg + ' #0\n';
+        data.instructionCount++;
+        data.asm += 'LRC r' + (destReg + 2) + ' #' + Math.floor((data.instructionCount + 4) / SEGMENT_SIZE) + '\n';
+        data.instructionCount++;
+        data.asm += 'LRC r' + (destReg + 3) + ' #' + ((data.instructionCount + 3) % SEGMENT_SIZE) + '\n';
+        data.instructionCount++;
+        data.asm += 'JEQ r' + (destReg + 1) + ' r' + (destReg + 2) + ' r' + (destReg + 3) + '\n';
+        data.instructionCount++;
+        data.asm += 'LRC r' + destReg + ' #1\n'
+        data.instructionCount++;
+        return;
+    }
+    else if (lt != -1) {
+        var left = expr.slice(0, lt);
+        var right = expr.slice(lt + 1, expr.length);
+        decomposeExpression(left, symbolMap, data, destReg + 1);
+        decomposeExpression(right, symbolMap, data, destReg + 2);
+        data.asm += 'CMP r' + (destReg + 1) + ' r' + (destReg + 1) + ' r' + (destReg + 2) + '\n';
+        data.instructionCount++;
+        data.asm += 'LRC r' + destReg + ' #1\n';
+        data.instructionCount++;
+        data.asm += 'LRC r' + (destReg + 2) + ' #' + Math.floor((data.instructionCount + 4) / SEGMENT_SIZE) + '\n';
+        data.instructionCount++;
+        data.asm += 'LRC r' + (destReg + 3) + ' #' + ((data.instructionCount + 3) % SEGMENT_SIZE) + '\n';
+        data.instructionCount++;
+        data.asm += 'JLT r' + (destReg + 1) + ' r' + (destReg + 2) + ' r' + (destReg + 3) + '\n';
+        data.instructionCount++;
+        data.asm += 'LRC r' + destReg + ' #0\n'
+        data.instructionCount++;
+        return;
+    }
+    else if (gt != -1) {
+        var left = expr.slice(0, gt);
+        var right = expr.slice(gt + 1, expr.length);
+        decomposeExpression(left, symbolMap, data, destReg + 1);
+        decomposeExpression(right, symbolMap, data, destReg + 2);
+        data.asm += 'CMP r' + (destReg + 1) + ' r' + (destReg + 1) + ' r' + (destReg + 2) + '\n';
+        data.instructionCount++;
+        data.asm += 'LRC r' + destReg + ' #1\n';
+        data.instructionCount++;
+        data.asm += 'LRC r' + (destReg + 2) + ' #' + Math.floor((data.instructionCount + 4) / SEGMENT_SIZE) + '\n';
+        data.instructionCount++;
+        data.asm += 'LRC r' + (destReg + 3) + ' #' + ((data.instructionCount + 3) % SEGMENT_SIZE) + '\n';
+        data.instructionCount++;
+        data.asm += 'JGT r' + (destReg + 1) + ' r' + (destReg + 2) + ' r' + (destReg + 3) + '\n';
+        data.instructionCount++;
+        data.asm += 'LRC r' + destReg + ' #0\n'
+        data.instructionCount++;
+        return;
+    }
+    else if (mem != -1) {
+        var segment = [];
+        var comma;
+        for (var c = 1; c < expr.length && expr[c] != ','; c++) {
+            segment.push(expr[c]);
+            comma = c + 1;
+        }
+        var offset = [];
+        var close;
+        for (var c = comma + 1; c < expr.length && expr[c] != ']'; c++) {
+            offset.push(expr[c]);
+            close = c + 1;
+        }
+        decomposeExpression(segment, symbolMap, data, destReg);
+        decomposeExpression(offset, symbolMap, data, destReg + 1);
+        data.asm += 'LDR r' + destReg + ' r' + destReg + ' r' + (destReg + 1) + '\n';
+        data.instructionCount++;
+        return;
+    }
+    else if (expr.length == 2) {
+        if (expr[0] == '~') {
+            decomposeExpression(expr[1], symbolMap, data, destReg);
+            data.asm += 'NOT r' + destReg + ' r' + destReg + '\n';
+            data.instructionCount++;
+        }
+    }
+    else {
+        decomposeExpression(expr[0], symbolMap, data, destReg);
+        decomposeExpression(expr[2], symbolMap, data, destReg + 1);
+        if (expr[1] == '+') {
+            data.asm += 'ADD r' + destReg + ' r' + destReg + ' r' + (destReg + 1) + '\n';
+            data.instructionCount++;
+        }
+        else if (expr[1] == '-') {
+            data.asm += 'SUB r' + destReg + ' r' + destReg + ' r' + (destReg + 1) + '\n';
+            data.instructionCount++;
+        }
+        else if (expr[1] == '&') {
+            data.asm += 'AND r' + destReg + ' r' + destReg + ' r' + (destReg + 1) + '\n';
+            data.instructionCount++;
+        }
+        else if (expr[1] == '|') {
+            data.asm += 'OR r' + destReg + ' r' + destReg + ' r' + (destReg + 1) + '\n';
+            data.instructionCount++;
+        }
+        else if (expr[1] == '^') {
+            data.asm += 'XOR r' + destReg + ' r' + destReg + ' r' + (destReg + 1) + '\n';
+            data.instructionCount++;
+        }
+        else if (expr[1] == '>>') {
+            data.asm += 'LSR r' + destReg + ' r' + (destReg + 1) + '\n';
+            data.instructionCount++;
+        }
+        else if (expr[1] == '<<') {
+            data.asm += 'LSL r' + destReg + ' r' + (destReg + 1) + '\n';
+            data.instructionCount++;
+        }
+    }
 }
 
 function functionReturn(data) {
@@ -282,7 +465,7 @@ function addVariableTomap(ident, symbolMap) {
             offset = symbol.offset + 1;
         }
         else if (symbol.segment == segment) {
-            if (symbol.offset > offset)
+            if (symbol.offset >= offset)
                 offset = symbol.offset + 1;
         }
     }
