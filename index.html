@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <title>Vapor Spec</title>
     <link rel="stylesheet" type="text/css" media="screen" href="main.css" />
+    <script src="./pong2.js"></script>
     <script src="./tools/assembler.js"></script>
     <script src="./tools/compiler.js"></script>
     <script src="./machine/constants.js"></script>
@@ -18,8 +19,7 @@
             <canvas width=256 height=192 id='game_canvas'></canvas><br>
             Upload ROM:  <input type="file" id="upload_rom" multiple='false' onchange='uploadRom(this.files)'><br><br>
             Select ROM:  <select id='rom_select'>
-                <option>[None]</option>
-                <option selected>mars.rom</option>
+                <option selected>[None]</option>
             </select><br>
             <p>
                 Controls:<br>
