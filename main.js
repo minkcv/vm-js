@@ -81,8 +81,3 @@ function getRom() {
 }
 
 //loadProgram(mars, romStringToBinary(marsrom));
-
-VM.canvas = document.getElementById('game_canvas');
-VM.ctx = VM.canvas.getContext('2d');
-
-document.getElementById('vaporlang_input').value = pong2;

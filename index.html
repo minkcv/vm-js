@@ -12,6 +12,11 @@
     <script src="./machine/gpu.js"></script>
     <script src="./machine/ipu.js"></script>
     <script src="./machine/vm.js"></script>
+    <script>
+        document.getElementById('vaporlang_input').value = pong2;
+        VM.canvas = document.getElementById('game_canvas');
+        VM.ctx = VM.canvas.getContext('2d');
+    </script>
 </head>
 <body>
     <div class='row'>
