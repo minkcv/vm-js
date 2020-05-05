@@ -4,6 +4,7 @@ var marsrom = 'ff0000fffc00003ffc15583ffc15583ffc15683ffc05a03fff0000fffc00003ff
 
 //var loadedRoms = [{name: 'mars.rom', data: romStringToBinary(marsrom)}];
 var loadedRoms = [];
+var loadedBins = [];
 var running;
 
 function loadProgram(bin, rom) {
@@ -15,17 +16,8 @@ function loadProgram(bin, rom) {
     VM.startTime = Date.now();
     VM.gpu.active = false;
     VM.gpu.refreshed = false;
-    var instruction = '';
-    var program = []; // Make groups of 2 bytes
-    for (var i = 0; i < bin.length + 4; i+=4) {
-        instruction += bin.charAt(i);
-        instruction += bin.charAt(i + 1);
-        instruction += bin.charAt(i + 2);
-        instruction += bin.charAt(i + 3);
-        program.push(parseInt(instruction, 16));
-        instruction = '';
-    }
-    VM.code = program;
+    VM.code = bin;
+    VM.breakState = false;
     for (var i = 0; i < 128 * MEMORY_SEGMENT_SIZE; i++) {
         VM.memory[ROM_SEGMENT_START * MEMORY_SEGMENT_SIZE + i] = 0;
     }
@@ -38,6 +30,20 @@ function loadProgram(bin, rom) {
     if (running)
         clearInterval(running);
     running = setInterval(()=>run(VM), 16);
+}
+
+function programStringToBinary(bin) {
+    var instruction = '';
+    var program = []; // Make groups of 2 bytes
+    for (var i = 0; i < bin.length + 4; i+=4) {
+        instruction += bin.charAt(i);
+        instruction += bin.charAt(i + 1);
+        instruction += bin.charAt(i + 2);
+        instruction += bin.charAt(i + 3);
+        program.push(parseInt(instruction, 16));
+        instruction = '';
+    }
+    return program;
 }
 
 function romStringToBinary(rom) {
@@ -68,6 +74,23 @@ function uploadRom(files) {
         reader.readAsArrayBuffer(file);
 }
 
+function uploadBin(files) {
+    var file = files[0];
+    var reader = new FileReader();
+    reader.onloadend = function () {
+        // bins are length prefixed
+        var bin = new Uint16Array(reader.result.slice(2));
+        loadedBins.push({name: file.name, data: bin});
+        var option = document.createElement('option');
+        option.value = file.name;
+        option.innerHTML = file.name;
+        document.getElementById('bin_select').appendChild(option);
+        option.selected = 'selected';
+    };
+    if (file)
+        reader.readAsArrayBuffer(file);
+}
+
 function getRom() {
     var romName = document.getElementById('rom_select').value;
     var rom = null;
@@ -78,6 +101,18 @@ function getRom() {
             rom = r.data;
     });
     return rom;
+}
+
+function getBin() {
+    var binName = document.getElementById('bin_select').value;
+    var bin = null;
+    if (binName == '[None]')
+        return null;
+    loadedBins.forEach((b) => {
+        if (b.name == binName)
+            bin = b.data;
+    });
+    return bin;
 }
 
 //loadProgram(mars, romStringToBinary(marsrom));

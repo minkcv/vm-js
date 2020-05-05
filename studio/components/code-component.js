@@ -3,7 +3,7 @@ var asmEditor;
 
 layout.registerComponent( 'codeComponent', function(container, componentState) {
     container.getElement().html(
-    `<textarea class='codeEditor' id='` + componentState.type + `_input'></textarea>`);
+    `<div class='codeEditor'><textarea id='` + componentState.type + `_input'></textarea></div>`);
     container.on('open', function() {
         var myCodeMirror = CodeMirror.fromTextArea(document.getElementById(componentState.type + '_input'), {
             mode: '',

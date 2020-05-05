@@ -12,16 +12,17 @@
     <script src="./machine/gpu.js"></script>
     <script src="./machine/ipu.js"></script>
     <script src="./machine/vm.js"></script>
-    <script>
-        document.getElementById('vaporlang_input').value = pong2;
-        VM.canvas = document.getElementById('game_canvas');
-        VM.ctx = VM.canvas.getContext('2d');
-    </script>
 </head>
 <body>
     <div class='row'>
         <div class='column'>
             <canvas width=256 height=192 id='game_canvas'></canvas><br>
+            Upload BIN:  <input type="file" id="upload_bin" multiple='false' onchange='uploadBin(this.files)'><br><br>
+            Select BIN:  <select id='bin_select'>
+                <option selected>[None]</option>
+            </select><br>
+            <button onclick='loadProgram(getBin(), getRom())'>Run BIN</button>
+            <br>
             Upload ROM:  <input type="file" id="upload_rom" multiple='false' onchange='uploadRom(this.files)'><br><br>
             Select ROM:  <select id='rom_select'>
                 <option selected>[None]</option>
@@ -34,14 +35,19 @@
             <a href='https://github.com/minkcv/vm'>Vapor Spec Repo</a>
         </div>
         <div class='column'>
-            <p><button onclick='loadProgram(assemble(), getRom());'>Assemble and Run</button></p>
+            <p><button onclick='loadProgram(programStringToBinary(assemble()), getRom());'>Assemble and Run</button></p>
             <textarea rows='20' cols='50' id='assembly_input' class='code'></textarea>
         </div>
         <div class='column'>
-            <p><button onclick='compile(); loadProgram(assemble(), getRom());'>Compile, Assemble, and Run</button>  <button onclick='compile();'>Compile</button></p>
+            <p><button onclick='compile(); loadProgram(programStringToBinary(assemble()), getRom());'>Compile, Assemble, and Run</button>  <button onclick='compile();'>Compile</button></p>
             <textarea rows='20' cols='50' id='vaporlang_input' class='code'></textarea>
         </div>
     </div>
     <script src="./main.js"></script>
+    <script>
+        document.getElementById('vaporlang_input').value = pong2;
+        VM.canvas = document.getElementById('game_canvas');
+        VM.ctx = VM.canvas.getContext('2d');
+    </script>
 </body>
 </html>
