@@ -36,7 +36,7 @@ pre {
     font-size: 12pt;
     color: #cccccc;
 }
-.actions-menu {
+.actions-menu, .sprites {
     font-family: Arial, Helvetica, sans-serif;
     font-size: 12pt;
     color: #cccccc;
@@ -60,16 +60,6 @@ h2 {
 h1 {
     font-size: 30pt;
     margin-bottom: 10px;
-}
-::-moz-selection {
-    color: #cccccc;
-    background: transparent;
-    background-color: transparent;
-}
-::selection {
-    color: #cccccc;
-    background: transparent;
-    background-color: transparent;
 }
 .log {
     overflow: auto;

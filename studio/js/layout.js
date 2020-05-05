@@ -36,7 +36,7 @@ var config = {
                 id: 'codeStack',
                 height: 30,
                 content: [{
-                type: 'component',
+                    type: 'component',
                     height: 35,
                     componentName: 'codeComponent',
                     componentState: {type: 'vaporlang'},
@@ -50,6 +50,12 @@ var config = {
                     title: 'Assembly'
                 }]
             }]
+        },{
+            type: 'component',
+            componentName: 'spritesComponent',
+            componentState: {},
+            isClosable: false,
+            title: 'Sprites'
         }]
     }]
 };
