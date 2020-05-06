@@ -5,7 +5,8 @@ layout.registerComponent( 'spritesComponent', function(container, componentState
         <button onclick='deleteSprite()'>Delete Sprite</button>
         <select id='select-sprite' onchange='selectSprite()'></select>
         <div id='sprite-controls'>
-            Name: <input type='text' id='sprite-name' oninput='updateName()'></input><br>
+            Name: <input type='text' id='sprite-name' oninput='updateName()'></input>
+            <br>
             <table>
                 <tr>
                     <td id='sprite-color-palette'>
