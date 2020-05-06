@@ -1,24 +1,28 @@
 layout.registerComponent( 'spritesComponent', function(container, componentState){
     container.getElement().html(
     `<div class='sprites' id='sprites'>
-        <button onclick='addSprite()'>Add Sprite</button>
-        <button onclick='deleteSprite()'>Delete Sprite</button>
-        <select id='select-sprite' onchange='selectSprite()'></select>
-        <div id='sprite-controls'>
-            Name: <input type='text' id='sprite-name' oninput='updateName()'></input>
+    <div id='sprite-controls'>
+            <button onclick='addSprite()'>Add Sprite</button>
+            <button onclick='deleteSprite()'>Delete Sprite</button>
+            <select id='select-sprite' onchange='selectSprite()'></select><br>
+            Sprite Name: <input type='text' id='sprite-name' oninput='updateName()'></input>
+            Sprite Width: <select id='sprite-width' onchange='setWidth()'></select>
+            Sprite Height: <select id='sprite-height' onchange='setHeight()'></select>
             <br>
             <table>
                 <tr>
                     <td id='sprite-color-palette'>
-                        <input type='radio' id='color1' name='colors' value='0'><label for='color1' id='color1label'></label><br>
+                        <input type='radio' id='color1' name='colors' value='0' checked><label for='color1' id='color1label'></label><br>
                         <input type='radio' id='color2' name='colors' value='1'><label for='color2' id='color2label'></label><br>
                         <input type='radio' id='color3' name='colors' value='2'><label for='color3' id='color3label'></label><br>
                         <input type='radio' id='color4' name='colors' value='3'><label for='color4' id='color4label'></label><br>
                     </td>
-                    <td id='color-palette'>
+                    <td id='color-palette' class='color-buttons'>
                     </td>
                 </tr>
             </table>
+        </div>
+        <div id='sprite' class='color-buttons'>
         </div>
     </div>`);
     container.on('open', function() {
@@ -28,16 +32,31 @@ layout.registerComponent( 'spritesComponent', function(container, componentState
             btn.style.backgroundColor = getColorAsCSS(i);
             btn.value = i;
             btn.onclick = function() {
+                if (currentSprite < 0)
+                    return;
                 var color = parseInt(event.target.value);
                 var colorIndex = parseInt($('input[name=colors]:checked').val());
-                if (isNaN(colorIndex) || currentSprite < 0)
-                    return;
                 sprites[currentSprite].colors[colorIndex] = color;
                 document.getElementById('color' + (colorIndex + 1) + 'label').style.backgroundColor = getColorAsCSS(color);
+                updateSprite();
             };
             colorPalette.appendChild(btn);
             if ((i + 1) % 32 == 0 && i != 0)
                 colorPalette.appendChild(document.createElement('br'))
+        }
+        var widthSelect = document.getElementById('sprite-width');
+        for (var i = 4; i <= 256; i += 4) {
+            var option = document.createElement('option');
+            option.value = i;
+            option.text = i;
+            widthSelect.appendChild(option);
+        }
+        var heightSelect = document.getElementById('sprite-height');
+        for (var i = 4; i <= 192; i += 4) {
+            var option = document.createElement('option');
+            option.value = i;
+            option.text = i;
+            heightSelect.appendChild(option);
         }
     });
 });
@@ -61,7 +80,10 @@ function addSprite() {
     name += j;
     var sprite = {
         name: name,
-        colors: [0, 1, 2, 3]
+        colors: [0, 1, 2, 3],
+        width: 4,
+        height: 4,
+        data: new Array(16).fill(0)
     }
     sprites.push(sprite);
     currentSprite = sprites.length - 1;
@@ -128,6 +150,67 @@ function selectSprite() {
         var green = getGreen(sprite.colors[i]);
         var blue = getBlue(sprite.colors[i]);
         document.getElementById('color' + (i + 1) + 'label').style.backgroundColor = 'rgb(' + red + ', ' + green + ', ' + blue + ')';
+    }
+    document.getElementById('sprite-width').selectedIndex = (sprite.width / 4) - 1;
+    document.getElementById('sprite-height').selectedIndex = (sprite.height / 4) - 1;
+    updateSprite();
+}
+
+function setWidth() {
+    if (currentSprite < 0)
+        return;
+    var width = parseInt(document.getElementById('sprite-width').value);
+    sprites[currentSprite].width = width;
+    var height = sprites[currentSprite].height;
+    sprites[currentSprite].data = new Array(width * height).fill(0);
+    updateSprite();
+}
+
+function setHeight() {
+    if (currentSprite < 0)
+        return;
+    var height = parseInt(document.getElementById('sprite-height').value);
+    sprites[currentSprite].height = height;
+    var width = sprites[currentSprite].width;
+    sprites[currentSprite].data = new Array(width * height).fill(0);
+    updateSprite();
+}
+
+var pixelClick = function() {
+    if (event.buttons != 1 && event.which != 1)
+        return;
+    var colorIndex = parseInt($('input[name=colors]:checked').val());
+    var color = sprites[currentSprite].colors[colorIndex];
+    this.style.backgroundColor = getColorAsCSS(color);
+    var pixelIndex = this.attributes['i'];
+    sprites[currentSprite].data[pixelIndex] = colorIndex;
+};
+
+function updateSprite() {
+    var div = document.getElementById('sprite');
+    div.innerHTML = '';
+    var sprite = sprites[currentSprite];
+    var width = sprite.width;
+    var height = sprite.height;
+    var scale = 12;
+    if (width > 48)
+        scale = 8;
+    for (var y = 0; y < height; y++) {
+        for (var x = 0; x < width; x++) {
+            var i = x + (y * width);
+            var pixel = document.createElement('span');
+            var colorIndex = sprite.data[i];
+            var color = sprite.colors[colorIndex];
+            pixel.style.backgroundColor = getColorAsCSS(color);
+            pixel.style.width = scale + 'px';
+            pixel.style.height = scale + 'px';
+            pixel.style.display = 'inline-block';
+            pixel.attributes['i'] = i;
+            pixel.onmousemove = pixelClick;
+            pixel.onclick = pixelClick;
+            div.appendChild(pixel);
+        }
+        div.appendChild(document.createElement('br'));
     }
 }
 

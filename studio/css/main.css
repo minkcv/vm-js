@@ -42,6 +42,19 @@ pre {
     color: #cccccc;
     margin: 5px;
 }
+#sprites {
+    height: 99%;
+    display: flex;
+    flex-flow: column;
+}
+#sprite {
+    flex-grow: 1;
+    overflow: auto;
+    white-space: nowrap;
+}
+#sprite > br::selection {
+    user-select: none;
+}
 #sprite-color-palette {
     min-width: 120px;
 }
@@ -51,13 +64,15 @@ pre {
     display: inline-block;
 }
 #color-palette > button {
-    margin: 0px;
-    padding: 0px;
-    border: 0px;
     height: 14px;
     width: 14px;
 }
-#color-palette {
+.color-buttons > button {
+    margin: 0px;
+    padding: 0px;
+    border: 0px;
+}
+.color-buttons {
     line-height: 0;
 }
 h1, h2, h3 {
