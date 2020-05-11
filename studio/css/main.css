@@ -10,7 +10,9 @@ hr {
     margin-bottom: 5px;
     border-color: #cccccc;
 }
-
+a:visited, a {
+    color: white;
+}
 .codeEditor {
     width: 100%;
     height: 100%;

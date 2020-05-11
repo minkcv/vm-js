@@ -8,22 +8,24 @@ var config = {
         type: 'row',
         content:[{
             type: 'column',
-            width: 20,
+            width: 25,
             content:[{
                 type: 'component',
+                height: 25,
                 componentName: 'displayComponent',
                 componentState: {},
                 isClosable: false,
                 title: 'Display'
             },{
                 type: 'component',
+                height: 25,
                 componentName: 'actionsComponent',
                 componentState: {},
                 isClosable: false,
                 title: 'Actions'
             },{
                 type: 'component',
-                height: 18,
+                height: 25,
                 componentName: 'logComponent',
                 componentState: {},
                 isClosable: false,

@@ -14,6 +14,8 @@ layout.registerComponent( 'actionsComponent', function(container, componentState
         Upload ROM:  <input type="file" id="upload_rom" multiple='false' onchange='uploadRom(this.files)'><br>
         Select ROM:  <select id='rom_select'>
             <option selected>[None]</option>
-        </select><br>
+        </select><br><br>
+        <a href='https://github.com/minkcv/vm'>Vapor Spec Repo</a><br>
+        <a href='https://minkcv.github.io/vm-js/'>Simple interface</a>
     </div>`);
 });
