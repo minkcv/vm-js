@@ -7,8 +7,9 @@ var SEGMENT_SIZE = 256;
 var BlockType = {If: 0, While: 1, Func: 2};
 var SymbolType = {Variable: 0, Constant: 1};
 
-function compile() {
-    var source = document.getElementById('vaporlang_input').value;
+function compile(source) {
+    if (source === undefined || source == null)
+        source = document.getElementById('vaporlang_input').value;
     var lines = source.split('\n');
     var data = {
         asm: '',
@@ -248,6 +249,7 @@ function compile() {
     }
 
     document.getElementById('assembly_input').value = data.asm;
+    return data.asm;
 }
 
 function decomposeExpression(expr, symbolMap, data, destReg) {

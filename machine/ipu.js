@@ -1,6 +1,8 @@
 var keys1 = { "ArrowUp": KEY_UP, "ArrowDown": KEY_DOWN, "ArrowRight": KEY_RIGHT, "ArrowLeft": KEY_LEFT, "KeyO": KEY_RCTRL, "KeyU": KEY_RALT, "KeyY": KEY_RSHIFT, "KeyH": KEY_RETURN};
 var keys2 = { "KeyA": KEY_A, "KeyS": KEY_S, "KeyW": KEY_W, "KeyD": KEY_D , "KeyQ": KEY_LCTRL, "KeyE": KEY_LALT, "KeyR": KEY_LSHIFT, "KeyF": KEY_TAB};
 addEventListener("keydown", function(e) {
+    if (!VM.memory)
+        return;
     if (keys1[e.code]) {
         var joystick1Bits = getJoystickBits(JOYSTICK_1_OFFSET);
         joystick1Bits |= keys1[e.code];
@@ -14,6 +16,8 @@ addEventListener("keydown", function(e) {
 }, false);
 
 addEventListener("keyup", function(e) {
+    if (!VM.memory)
+        return;
     if (keys1[e.code]) {
         var joystick1Bits = getJoystickBits(JOYSTICK_1_OFFSET);
         joystick1Bits &= (~keys1[e.code]);

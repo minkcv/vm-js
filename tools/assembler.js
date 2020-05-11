@@ -1,5 +1,6 @@
 function assemble(asm) {
-    var asm = document.getElementById('assembly_input').value;
+    if (asm === undefined || asm == null)
+        asm = document.getElementById('assembly_input').value;
     var numInstructions = countInstructions(asm);
     var labelMap = createLabelMap(asm);
     var bin = '';
