@@ -4,7 +4,9 @@ layout.registerComponent( 'spritesComponent', function(container, componentState
     <div id='sprite-controls'>
             <button onclick='addSprite()'>Add Sprite</button>
             <button onclick='deleteSprite()'>Delete Sprite</button>
-            <select id='select-sprite' onchange='selectSprite()'></select><br>
+            <select id='select-sprite' onchange='selectSprite()'></select>
+            <button onclick='buildRom()'>Build sprites.rom</button>
+            <br>
             Sprite Name: <input type='text' id='sprite-name' oninput='updateName()'></input>
             Sprite Width: <select id='sprite-width' onchange='setWidth()'></select>
             Sprite Height: <select id='sprite-height' onchange='setHeight()'></select>
@@ -64,6 +66,39 @@ layout.registerComponent( 'spritesComponent', function(container, componentState
 var sprites = [];
 var currentSprite = -1;
 var previousName;
+
+function buildRom() {
+    var rom = [];
+    log('--- Sprite Memory Locations ---');
+    for (var i = 0; i < sprites.length; i++) {
+        for (var pixel = 0; pixel < sprites[i].data.length; pixel+=4) {
+            var byte = 0;
+            byte |= sprites[i].data[pixel] << 6;
+            byte |= sprites[i].data[pixel + 1] << 4;
+            byte |= sprites[i].data[pixel + 2] << 2;
+            byte |= sprites[i].data[pixel + 3];
+            rom.push(byte);
+        }
+        var segment = Math.floor(rom.length / MEMORY_SEGMENT_SIZE) + 128;
+        var offset = rom.length % MEMORY_SEGMENT_SIZE;
+        log(sprites[i].name + ' located at ' + segment + '.' + offset);
+    }
+    var exists = null;
+    for (var i = 0; i < loadedRoms.length; i++) {
+        if (loadedRoms[i].name == 'sprites.rom')
+            exists = loadedRoms[i];
+    };
+    if (exists != null)
+        exists.data = rom;
+    else {
+        loadedRoms.push({name: 'sprites.rom', data: rom});
+        var option = document.createElement('option');
+        option.value = 'sprites.rom';
+        option.innerHTML = 'sprites.rom';
+        document.getElementById('rom_select').appendChild(option);
+        option.selected = 'selected';
+    }
+}
 
 function addSprite() {
     var name = 'Untitled';
