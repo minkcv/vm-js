@@ -71,6 +71,9 @@ function buildRom() {
     var rom = [];
     log('--- Sprite Memory Locations ---');
     for (var i = 0; i < sprites.length; i++) {
+        var segment = Math.floor(rom.length / MEMORY_SEGMENT_SIZE) + 128;
+        var offset = rom.length % MEMORY_SEGMENT_SIZE;
+        log(sprites[i].name + ' located at ' + segment + '.' + offset);
         for (var pixel = 0; pixel < sprites[i].data.length; pixel+=4) {
             var byte = 0;
             byte |= sprites[i].data[pixel] << 6;
@@ -79,9 +82,6 @@ function buildRom() {
             byte |= sprites[i].data[pixel + 3];
             rom.push(byte);
         }
-        var segment = Math.floor(rom.length / MEMORY_SEGMENT_SIZE) + 128;
-        var offset = rom.length % MEMORY_SEGMENT_SIZE;
-        log(sprites[i].name + ' located at ' + segment + '.' + offset);
     }
     var exists = null;
     for (var i = 0; i < loadedRoms.length; i++) {
